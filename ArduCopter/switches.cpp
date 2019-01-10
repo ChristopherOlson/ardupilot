@@ -4,13 +4,13 @@
 
 //Documentation of Aux Switch Flags:
 struct {
-    uint8_t CH6_flag    : 2; // 0, 1    // ch6 aux switch : 0 is low or false, 1 is center or true, 2 is high
-    uint8_t CH7_flag    : 2; // 2, 3    // ch7 aux switch : 0 is low or false, 1 is center or true, 2 is high
-    uint8_t CH8_flag    : 2; // 4, 5    // ch8 aux switch : 0 is low or false, 1 is center or true, 2 is high
-    uint8_t CH9_flag    : 2; // 6, 7    // ch9 aux switch : 0 is low or false, 1 is center or true, 2 is high
-    uint8_t CH10_flag   : 2; // 8, 9    // ch10 aux switch : 0 is low or false, 1 is center or true, 2 is high
-    uint8_t CH11_flag   : 2; // 10,11   // ch11 aux switch : 0 is low or false, 1 is center or true, 2 is high
-    uint8_t CH12_flag   : 2; // 12,13   // ch12 aux switch : 0 is low or false, 1 is center or true, 2 is high
+    uint8_t CH6_flag;   // ch6 aux switch : 0 is low or false, 1 is center or true, 2 is high
+    uint8_t CH7_flag;   // ch7 aux switch : 0 is low or false, 1 is center or true, 2 is high
+    uint8_t CH8_flag;   // ch8 aux switch : 0 is low or false, 1 is center or true, 2 is high
+    uint8_t CH9_flag;   // ch9 aux switch : 0 is low or false, 1 is center or true, 2 is high
+    uint8_t CH10_flag;  // ch10 aux switch : 0 is low or false, 1 is center or true, 2 is high
+    uint8_t CH11_flag;  // ch11 aux switch : 0 is low or false, 1 is center or true, 2 is high
+    uint8_t CH12_flag;  // ch12 aux switch : 0 is low or false, 1 is center or true, 2 is high
 } aux_con;
 
 void Copter::read_control_switch()
@@ -42,7 +42,7 @@ void Copter::read_control_switch()
         if (set_mode((control_mode_t)flight_modes[switch_position].get(), MODE_REASON_TX_COMMAND)) {
             // play a tone
             if (control_switch_state.debounced_switch_position != -1) {
-                // alert user to mode change failure (except if autopilot is just starting up)
+                // alert user to mode change (except if autopilot is just starting up)
                 if (ap.initialised) {
                     AP_Notify::events.user_mode_change = 1;
                 }
@@ -73,7 +73,7 @@ void Copter::read_control_switch()
 // check_if_auxsw_mode_used - Check to see if any of the Aux Switches are set to a given mode.
 bool Copter::check_if_auxsw_mode_used(uint8_t auxsw_mode_check)
 {
-    bool ret = g.ch7_option == auxsw_mode_check || g.ch8_option == auxsw_mode_check || g.ch9_option == auxsw_mode_check 
+    bool ret = g.ch7_option == auxsw_mode_check || g.ch8_option == auxsw_mode_check || g.ch9_option == auxsw_mode_check
                 || g.ch10_option == auxsw_mode_check || g.ch11_option == auxsw_mode_check || g.ch12_option == auxsw_mode_check;
 
     return ret;
@@ -108,21 +108,33 @@ void Copter::reset_control_switch()
 }
 
 // read_3pos_switch
-uint8_t Copter::read_3pos_switch(uint8_t chan)
+bool Copter::read_3pos_switch(uint8_t chan, uint8_t &ret) const
 {
-    uint16_t radio_in = RC_Channels::rc_channel(chan)->get_radio_in();
-    if (radio_in < AUX_SWITCH_PWM_TRIGGER_LOW) return AUX_SWITCH_LOW;      // switch is in low position
-    if (radio_in > AUX_SWITCH_PWM_TRIGGER_HIGH) return AUX_SWITCH_HIGH;    // switch is in high position
-    return AUX_SWITCH_MIDDLE;                                       // switch is in middle position
+    const uint16_t radio_in = RC_Channels::rc_channel(chan)->get_radio_in();
+    if ((radio_in <= 900) || (radio_in >= 2200)) {
+        return false;
+    }
+    if (radio_in < AUX_SWITCH_PWM_TRIGGER_LOW) {
+        // switch is in low position
+        ret = AUX_SWITCH_LOW;
+    } else if (radio_in > AUX_SWITCH_PWM_TRIGGER_HIGH) {
+        // switch is in high position
+        ret = AUX_SWITCH_HIGH;
+    } else {
+        // switch is in middle position
+        ret = AUX_SWITCH_MIDDLE;
+    }
+    return true;
 }
 
 // can't take reference to a bitfield member, thus a #define:
-#define read_aux_switch(chan, flag, option)                           \
+#define read_aux_switch(chan, flag, option)                         \
     do {                                                            \
-        switch_position = read_3pos_switch(chan); \
-        if (flag != switch_position) {                              \
-            flag = switch_position;                                 \
-            do_aux_switch_function(option, flag);                   \
+        if (read_3pos_switch(chan, switch_position)) {              \
+            if (debounce_aux_switch(chan, flag) && flag != switch_position) { \
+                flag = switch_position;                             \
+                do_aux_switch_function(option, flag);               \
+            }                                                       \
         }                                                           \
     } while (false)
 
@@ -153,14 +165,26 @@ void Copter::read_aux_switches()
 void Copter::init_aux_switches()
 {
     // set the CH7 ~ CH12 flags
-    aux_con.CH7_flag = read_3pos_switch(CH_7);
-    aux_con.CH8_flag = read_3pos_switch(CH_8);
-    aux_con.CH10_flag = read_3pos_switch(CH_10);
-    aux_con.CH11_flag = read_3pos_switch(CH_11);
+    if (!read_3pos_switch(CH_7, aux_con.CH7_flag)) {
+        aux_con.CH7_flag = AUX_SWITCH_LOW;
+    }
+    if (!read_3pos_switch(CH_8, aux_con.CH8_flag)) {
+        aux_con.CH8_flag = AUX_SWITCH_LOW;
+    }
+    if (!read_3pos_switch(CH_10, aux_con.CH10_flag)) {
+        aux_con.CH10_flag = AUX_SWITCH_LOW;
+    }
+    if (!read_3pos_switch(CH_11, aux_con.CH11_flag)) {
+        aux_con.CH11_flag = AUX_SWITCH_LOW;
+    }
 
     // ch9, ch12 only supported on some boards
-    aux_con.CH9_flag = read_3pos_switch(CH_9);
-    aux_con.CH12_flag = read_3pos_switch(CH_12);
+    if (!read_3pos_switch(CH_9, aux_con.CH9_flag)) {
+        aux_con.CH9_flag = AUX_SWITCH_LOW;
+    }
+    if (!read_3pos_switch(CH_12, aux_con.CH12_flag)) {
+        aux_con.CH12_flag = AUX_SWITCH_LOW;
+    }
 
     // initialise functions assigned to switches
     init_aux_switch_function(g.ch7_option, aux_con.CH7_flag);
@@ -175,7 +199,7 @@ void Copter::init_aux_switches()
 
 // init_aux_switch_function - initialize aux functions
 void Copter::init_aux_switch_function(int8_t ch_option, uint8_t ch_flag)
-{    
+{
     // init channel options
     switch(ch_option) {
         case AUXSW_SIMPLE_MODE:
@@ -199,6 +223,32 @@ void Copter::init_aux_switch_function(int8_t ch_option, uint8_t ch_flag)
             do_aux_switch_function(ch_option, ch_flag);
             break;
     }
+}
+
+/*
+  debounce an aux switch using a counter in copter.debounce
+  structure. This will return false until the same ch_flag is seen debounce_count times
+ */
+bool Copter::debounce_aux_switch(uint8_t chan, uint8_t ch_flag)
+{
+    // a value of 2 means we need 3 values in a row with the same
+    // value to activate
+    const uint8_t debounce_count = 2;
+
+    if (chan < CH_7 || chan > CH_12) {
+        // someone has forgotten to expand the debounce channel range
+        return false;
+    }
+    struct debounce &db = aux_debounce[chan-CH_7];
+    if (db.ch_flag != ch_flag) {
+        db.ch_flag = ch_flag;
+        db.count = 0;
+        return false;
+    }
+    if (db.count < debounce_count) {
+        db.count++;
+    }
+    return db.count >= debounce_count;
 }
 
 // do_aux_switch_function - implement the function invoked by the ch7 or ch8 switch
