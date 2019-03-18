@@ -1,13 +1,15 @@
-ArduHeli Official Release Notes:
+ArduHeli Stable Release Notes:
 ------------------------------------------------------------------
-ArduHeli 3.6.8 07-Apr-2019
-Changes from Copter 3.6.7
+ArduHeli 3.6.8 09-May-2019
+Changes from Copter 3.6
 1) Enhancements
     a) Helicopter rotor droop speed governor
     b) Improved Acro for Heli with virtual flybar
     c) Remove collective pre-arm check for helicopters
     d) Improved handling of slowdown and speed changes in Auto
-    3) Improved GCS message for throttle hold
+    e) Improved GCS message for throttle hold
+    f) Changed 'motor interlock' GSC message to 'throttle hold' for heli
+    g) Improve governor to handle signal outliers
 ------------------------------------------------------------------
 ------------------------------------------------------------------
 ArduPilot Copter Release Notes:
