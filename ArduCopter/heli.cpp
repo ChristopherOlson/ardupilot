@@ -158,6 +158,7 @@ void Copter::heli_update_rotor_speed_targets()
             // pass setpoint through as desired rotor speed, this is almost pointless as the Setpoint serves no function in this mode
             // other than being used to create a crude estimate of rotor speed
             if (rsc_control_deglitched > 0.0f) {
+                ((AP_MotorsHeli_Single&)*motors).set_rpm(rpm_sensor.get_rpm(0.0f));
                 ap.motor_interlock_switch = true;
                 motors->set_desired_rotor_speed(motors->get_rsc_setpoint());
             }else{

@@ -127,7 +127,7 @@ const AP_Scheduler::Task Copter::scheduler_tasks[] = {
     SCHED_TASK(dataflash_periodic,    400,    300),
     SCHED_TASK(perf_update,           0.1,    75),
     SCHED_TASK(read_receiver_rssi,    10,     75),
-    SCHED_TASK(rpm_update,            10,    200),
+    SCHED_TASK(rpm_update,            40,    200),
     SCHED_TASK(compass_cal_update,   100,    100),
     SCHED_TASK(accel_cal_update,      10,    100),
 #if ADSB_ENABLED == ENABLED

@@ -116,14 +116,15 @@ const AP_Param::GroupInfo AP_MotorsHeli_Single::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("GYR_GAIN_ACRO", 11, AP_MotorsHeli_Single,  _ext_gyro_gain_acro, 0),
 
+    // Indices 16-18 were used by RSC_PWM_MIN, RSC_PWM_MAX and RSC_PWM_REV and should not be used
+
     // @Param: COL_CTRL_DIR
     // @DisplayName: Collective Control Direction
-    // @Description: Collective Control Direction - 0 for Normal. 1 for Reversed
-    // @Values: 0: Normal, 1: Reversed
+    // @Description: Direction collective moves for positive pitch. 0 for Normal, 1 for Reversed
+    // @Values: 0:Normal,1:Reversed
     // @User: Standard
     AP_GROUPINFO("COL_CTRL_DIR", 19, AP_MotorsHeli_Single, _collective_direction, AP_MOTORS_HELI_SINGLE_COLLECTIVE_DIRECTION_NORMAL),
 
-    // Indices 16-18 were used by RSC_PWM_MIN, RSC_PWM_MAX and RSC_PWM_REV and should not be used
     // parameters up to and including 29 are reserved for tradheli
 
     AP_GROUPEND
@@ -245,6 +246,12 @@ void AP_MotorsHeli_Single::set_desired_rotor_speed(float desired_speed)
     _tail_rotor.set_desired_speed(_direct_drive_tailspeed*0.001f);
 }
 
+// set_rotor_rpm - used for governor with speed sensor
+void AP_MotorsHeli_Single::set_rpm(int16_t rotor_rpm)
+{
+    _main_rotor.set_rotor_rpm(rotor_rpm);
+}
+
 // calculate_scalars - recalculates various scalers used.
 void AP_MotorsHeli_Single::calculate_armed_scalars()
 {
@@ -257,8 +264,11 @@ void AP_MotorsHeli_Single::calculate_armed_scalars()
     _main_rotor.set_critical_speed(_rsc_critical*0.001f);
     _main_rotor.set_idle_output(_rsc_idle_output*0.001f);
     _main_rotor.set_throttle_curve(thrcrv, (uint16_t)_rsc_slewrate.get());
+    _main_rotor.set_governor_disengage(_rsc_governor_disengage*0.01f);
+    _main_rotor.set_governor_droop_setting(_rsc_governor_droop_setting*0.01f);
+    _main_rotor.set_governor_setpoint(_rsc_governor_setpoint);
+    _main_rotor.set_governor_tc(_rsc_governor_tc*0.01f);
 }
-
 
 // calculate_scalars - recalculates various scalers used.
 void AP_MotorsHeli_Single::calculate_scalars()
@@ -298,8 +308,8 @@ void AP_MotorsHeli_Single::calculate_scalars()
 
 // CCPM Mixers - calculate mixing scale factors by swashplate type
 void AP_MotorsHeli_Single::calculate_roll_pitch_collective_factors()
-{   //Three-Servo adjustable CCPM mixer factors
-    if (_swash_type == AP_MOTORS_HELI_SINGLE_SWASH_H3) {
+{
+    if (_swash_type == AP_MOTORS_HELI_SINGLE_SWASH_H3) {                  //Three-Servo adjustable CCPM mixer factors
         // aileron factors
         _rollFactor[CH_1] = cosf(radians(_servo1_pos + 90 - _phase_angle));
         _rollFactor[CH_2] = cosf(radians(_servo2_pos + 90 - _phase_angle));
@@ -314,10 +324,7 @@ void AP_MotorsHeli_Single::calculate_roll_pitch_collective_factors()
         _collectiveFactor[CH_1] = 1;
         _collectiveFactor[CH_2] = 1;
         _collectiveFactor[CH_3] = 1;
-    }
-
-    //Three-Servo H3-140 CCPM mixer factors
-    else if (_swash_type == AP_MOTORS_HELI_SINGLE_SWASH_H3_140) {
+    } else if (_swash_type == AP_MOTORS_HELI_SINGLE_SWASH_H3_140) {       //Three-Servo H3-140 CCPM mixer factors
         // aileron factors
         _rollFactor[CH_1] = 1;
         _rollFactor[CH_2] = -1;
@@ -332,10 +339,7 @@ void AP_MotorsHeli_Single::calculate_roll_pitch_collective_factors()
         _collectiveFactor[CH_1] = 1;
         _collectiveFactor[CH_2] = 1;
         _collectiveFactor[CH_3] = 1;
-    }
-
-    //H1 straight outputs, no mixing
-    else {
+    } else {                                                              //H1 straight outputs, no mixing
         // aileron factors
         _rollFactor[CH_1] = 1;
         _rollFactor[CH_2] = 0;
