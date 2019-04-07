@@ -1,3 +1,20 @@
+ArduHeli Release Notes:
+------------------------------------------------------------------
+ArduHeli 3.5.8 07-July-2019
+Changes from Copter 3.5.7
+1) EKF updates by Paul Riseborough
+2) support for reverse collective and H3-140 swashplates
+3) Alt Hold angle limiter fix for helicopters
+4) five-point spline interpolated throttle curve
+5) DDVP ramp/runup improvement
+6) add rotor droop speed governor
+7) protect against about of bounds RC value for SBus failsafe
+8) improve smoothness of stopping on spline waypoints
+9) improve handling of outliers on governor rpm sensor signal
+10) change 'motor interlock' to 'throttle hold' for heli
+11) add support for virtual flybar acro
+------------------------------------------------------------------
+------------------------------------------------------------------
 ArduPilot Copter Release Notes:
 ------------------------------------------------------------------
 Copter 3.5.7 17-Jul-2018 / 3.5.7-rc1 12-Jul-2018
