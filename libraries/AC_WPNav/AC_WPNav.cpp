@@ -74,7 +74,7 @@ const AP_Param::GroupInfo AC_WPNav::var_info[] = {
 // Note that the Vector/Matrix constructors already implicitly zero
 // their values.
 //
-AC_WPNav::AC_WPNav(const AP_InertialNav& inav, const AP_AHRS_View& ahrs, AC_PosControl& pos_control, const AC_AttitudeControl& attitude_control) :
+AC_WPNav::AC_WPNav(const AP_InertialNav& inav, AP_AHRS_View& ahrs, AC_PosControl& pos_control, const AC_AttitudeControl& attitude_control) :
     _inav(inav),
     _ahrs(ahrs),
     _pos_control(pos_control),
@@ -129,6 +129,7 @@ void AC_WPNav::update_brake(float ekfGndSpdLimit, float ekfNavVelGainScaler)
 /// waypoint navigation
 ///
 
+
 /// wp_and_spline_init - initialise straight line and spline waypoint controllers
 ///     updates target roll, pitch targets and I terms based on vehicle lean angles
 ///     should be called once before the waypoint controller is used but does not need to be called before subsequent updates to destination
@@ -146,11 +147,9 @@ void AC_WPNav::wp_and_spline_init()
 
     // initialise feed forward velocity to zero
     _pos_control.set_desired_velocity_xy(0.0f, 0.0f);
-    
-    // initialize desired waypoint speed
-    _wp_desired_speed_cms = _wp_speed_cms;
 
     // initialise position controller speed and acceleration
+    _wp_desired_speed_cms = _wp_speed_cms;
     _pos_control.set_speed_xy(_wp_speed_cms);
     _pos_control.set_accel_xy(_wp_accel_cmss);
     _pos_control.set_speed_z(-_wp_speed_down_cms, _wp_speed_up_cms);
@@ -507,7 +506,7 @@ bool AC_WPNav::update_wpnav()
     _pos_control.set_accel_xy(_wp_accel_cmss);
     _pos_control.set_accel_z(_wp_accel_z_cmss);
 
-    // wp_speed_update - update position controller xy to requested speed
+    // wp_speed_update - update _pos_control.set_max_speed_xy if speed change has been requested
     wp_speed_update(dt);
 
     // advance the target if necessary
@@ -796,7 +795,7 @@ bool AC_WPNav::update_spline()
     // get dt from pos controller
     float dt = _pos_control.get_dt();
 
-    // wp_speed_update - update position controller xy to requested speed
+    // wp_speed_update - update _pos_control.set_max_speed_xy if speed change has been requested
     wp_speed_update(dt);
 
     // advance the target if necessary
@@ -1048,13 +1047,21 @@ float AC_WPNav::get_slow_down_speed(float dist_from_dest_cm, float accel_cmss)
     }
 }
 
-/// wp_speed_update - calculates how to change speed and updates postion controller xy
+/// wp_speed_update - calculates how to handle speed change requests
 void AC_WPNav::wp_speed_update(float dt)
 {
     // calculate speed change for steady-state or speeding up
-    if (_wp_speed_cms < _wp_desired_speed_cms) {
-        _wp_speed_cms += _wp_accel_cmss * dt;
-    } else {
+    if (_wp_desired_speed_cms > _wp_speed_cms) {
+        _wp_speed_cms += _wp_desired_speed_cms;
+        if (_wp_speed_cms > _wp_desired_speed_cms) {
+            _wp_speed_cms = _wp_desired_speed_cms;
+        }
+        //update position controller speed
+        _pos_control.set_speed_xy(_wp_speed_cms);
+    
+        // flag that wp leash must be recalculated
+        _flags.recalc_wp_leash = true;
+    } else if (_wp_desired_speed_cms < _wp_speed_cms) {
         // slow down is requested so reduce speed within limit set by WPNAV_ACCEL
         _wp_speed_cms -= _wp_accel_cmss * dt;
         if (_wp_speed_cms < _wp_desired_speed_cms) {
