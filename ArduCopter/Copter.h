@@ -606,6 +606,7 @@ private:
         uint8_t dynamic_flight          : 1;    // 0   // true if we are moving at a significant speed (used to turn on/off leaky I terms)
         uint8_t init_targets_on_arming  : 1;    // 1   // true if we have been disarmed, and need to reset rate controller targets when we arm
         uint8_t inverted_flight         : 1;    // 2   // true for inverted flight mode
+        uint8_t in_autorotation         : 1;    // 3   // true when heli is in autorotation
     } heli_flags_t;
     heli_flags_t heli_flags;
 
@@ -776,6 +777,8 @@ private:
     void update_heli_control_dynamics(void);
     void heli_update_landing_swash();
     void heli_update_rotor_speed_targets();
+    void heli_update_autorotation();
+    void heli_set_autorotation(bool autotrotation);
 
     // inertia.cpp
     void read_inertia();

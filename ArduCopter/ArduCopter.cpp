@@ -233,6 +233,7 @@ void Copter::fast_loop()
 
 #if FRAME_CONFIG == HELI_FRAME
     update_heli_control_dynamics();
+    heli_update_autorotation();
 #endif //HELI_FRAME
 
     // Inertial Nav
