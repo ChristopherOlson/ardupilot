@@ -254,8 +254,13 @@ void AP_MotorsHeli_Single::calculate_armed_scalars()
     for (uint8_t i = 0; i < 5; i++) {
         thrcrv[i]=_rsc_thrcrv[i]*0.001f;
     }
-    _main_rotor.set_ramp_time(_rsc_ramp_time);
-    _main_rotor.set_runup_time(_rsc_runup_time);
+    if (_heliflags.enable_bailout) {
+        _main_rotor.set_ramp_time(1);
+        _main_rotor.set_runup_time(1);
+    } else {
+        _main_rotor.set_ramp_time(_rsc_ramp_time);
+        _main_rotor.set_runup_time(_rsc_runup_time); 
+    }
     _main_rotor.set_critical_speed(_rsc_critical*0.001f);
     _main_rotor.set_idle_output(_rsc_idle_output*0.001f);
     _main_rotor.set_throttle_curve(thrcrv, (uint16_t)_rsc_slewrate.get());
@@ -264,7 +269,21 @@ void AP_MotorsHeli_Single::calculate_armed_scalars()
     _main_rotor.set_governor_reference(_rsc_governor_reference);
     _main_rotor.set_governor_range(_rsc_governor_range);
     _main_rotor.set_governor_tc(_rsc_governor_tc*0.01f);
-   }
+
+    // send setpoints to DDVP rotor controller and trigger recalculation of scalars
+    if (_tail_type == AP_MOTORS_HELI_SINGLE_TAILTYPE_DIRECTDRIVE_VARPITCH) {
+        if (_heliflags.enable_bailout) {
+            _tail_rotor.set_ramp_time(1);
+            _tail_rotor.set_runup_time(1);
+        } else {
+            _tail_rotor.set_ramp_time(_rsc_ramp_time);
+            _tail_rotor.set_runup_time(_rsc_runup_time);
+        }
+    } else {
+        _tail_rotor.set_ramp_time(0);
+        _tail_rotor.set_runup_time(0);
+    }
+}
 
 
 // calculate_scalars - recalculates various scalers used.
@@ -290,14 +309,10 @@ void AP_MotorsHeli_Single::calculate_scalars()
     // send setpoints to DDVP rotor controller and trigger recalculation of scalars
     if (_tail_type == AP_MOTORS_HELI_SINGLE_TAILTYPE_DIRECTDRIVE_VARPITCH) {
         _tail_rotor.set_control_mode(ROTOR_CONTROL_MODE_SPEED_SETPOINT);
-        _tail_rotor.set_ramp_time(_rsc_ramp_time);
-        _tail_rotor.set_runup_time(_rsc_runup_time);
         _tail_rotor.set_critical_speed(_rsc_critical*0.001f);
         _tail_rotor.set_idle_output(_rsc_idle_output*0.001f);
     } else {
         _tail_rotor.set_control_mode(ROTOR_CONTROL_MODE_DISABLED);
-        _tail_rotor.set_ramp_time(0);
-        _tail_rotor.set_runup_time(0);
         _tail_rotor.set_critical_speed(0);
         _tail_rotor.set_idle_output(0);
     }
