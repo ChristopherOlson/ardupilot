@@ -64,6 +64,7 @@ public:
         // initialise flags
         _heliflags.landing_collective = 0;
         _heliflags.rotor_runup_complete = 0;
+        _heliflags.collective_below_mid = 1;
     };
 
     // init
@@ -152,6 +153,9 @@ public:
     // set_enable_bailout - allows main code to set when RSC can immediately ramp engine instantly
     void set_enable_bailout(bool bailout) { _heliflags.enable_bailout = bailout; }
 
+    // collective_below_mid - accessor to determine when collective is below H_COL_MID
+    bool collective_below_mid() { return _heliflags.collective_below_mid; }
+
     // var_info for holding Parameter information
     static const struct AP_Param::GroupInfo var_info[];
 
@@ -213,6 +217,7 @@ protected:
         uint8_t inverted_flight         : 1;    // true for inverted flight
         uint8_t in_autorotation         : 1;    // true if aircraft is in autorotation
         uint8_t enable_bailout          : 1;    // true if allowing RSC to quickly ramp up engine
+        uint8_t collective_below_mid    : 1;    // true if collective at or below H_COL_MID
     } _heliflags;
 
     // parameters
