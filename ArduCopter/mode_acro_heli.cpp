@@ -50,7 +50,7 @@ void Copter::ModeAcro_Heli::run()
     }   
 
     // clear landing flag above zero throttle
-    if (motors->armed() && motors->get_interlock() && motors->rotor_runup_complete() && !ap.throttle_zero) {
+    if (motors->armed() && motors->get_interlock() && motors->rotor_runup_complete() && !motors->collective_below_mid()) {
         set_land_complete(false);
     }
 
