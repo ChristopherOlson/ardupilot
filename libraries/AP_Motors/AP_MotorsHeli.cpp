@@ -65,21 +65,14 @@ const AP_Param::GroupInfo AP_MotorsHeli::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("SV_MAN",  6, AP_MotorsHeli, _servo_mode, SERVO_CONTROL_MODE_AUTOMATED),
 
-    // @Param: RSC_SETPOINT
-    // @DisplayName: External Motor Governor Setpoint
-    // @Description: PWM in microseconds passed to the external motor governor when external governor is enabled
-    // @Range: 0 1000
-    // @Units: PWM
-    // @Increment: 10
-    // @User: Standard
-    AP_GROUPINFO("RSC_SETPOINT", 7, AP_MotorsHeli, _rsc_setpoint, AP_MOTORS_HELI_RSC_SETPOINT),
+    // index 7 was RSC_SETPOINT and was moved to RSC library. Do not use this index in the future.
 
     // @Param: RSC_MODE
     // @DisplayName: Rotor Speed Control Mode
-    // @Description: Determines the method of rotor speed control
-    // @Values: 1:Ch8 Input, 2:SetPoint, 3:Throttle Curve, 4: Governor
+    // @Description: Selects the type of throttle control used. RC Passthru passes the throttle signal from the RC radio but does not provide protection for loss of RC signal. Electric ESC Governor uses H_RSC_SETPOINT to send the throttle signal to an ESC with an internal governor. Throttle Curve controls throttle with the collective by using the five throttle curve settings. Rotor Governor uses the throttle curve with ArduPilot's built-in governor to control rotor speed
+    // @Values: 1:RC Passthru,2:Electric ESC Governor,3:Throttle Curve,4:Rotor Governor
     // @User: Standard
-    AP_GROUPINFO("RSC_MODE", 8, AP_MotorsHeli, _rsc_mode, (int8_t)ROTOR_CONTROL_MODE_SPEED_PASSTHROUGH),
+    AP_GROUPINFO("RSC_MODE", 8, AP_MotorsHeli, _rsc_mode, ROTOR_CONTROL_MODE_CLOSED_LOOP_POWER_OUTPUT),
 
     // @Param: LAND_COL_MIN
     // @DisplayName: Landing Collective Minimum
@@ -91,36 +84,22 @@ const AP_Param::GroupInfo AP_MotorsHeli::var_info[] = {
     AP_GROUPINFO("LAND_COL_MIN", 9, AP_MotorsHeli, _land_collective_min, AP_MOTORS_HELI_LAND_COLLECTIVE_MIN),
 
     // @Param: RSC_RAMP_TIME
-    // @DisplayName: RSC Ramp Time
-    // @Description: Time in seconds for the output to the main rotor's ESC to reach full speed
+    // @DisplayName: Throttle Ramp Time
+    // @Description: Time in seconds for throttle to ramp from ground idle to flight idle power when throttle hold is released. This setting is used primarily by piston and turbine engines to smoothly engage the transmission clutch. However, it can also be used for electric ESC's that do not have an internal soft-start. If used with electric ESC with soft-start it is recommended to set this to 1 second so as to not confuse the ESC's soft-start function
     // @Range: 0 60
     // @Units: s
     // @User: Standard
     AP_GROUPINFO("RSC_RAMP_TIME", 10, AP_MotorsHeli, _rsc_ramp_time, AP_MOTORS_HELI_RSC_RAMP_TIME),
 
     // @Param: RSC_RUNUP_TIME
-    // @DisplayName: RSC Runup Time
-    // @Description: Time in seconds for the main rotor to reach full speed.  Must be longer than RSC_RAMP_TIME
+    // @DisplayName: Rotor Runup Time
+    // @Description: Actual time in seconds for the main rotor to reach full speed after throttle hold is released. Must be at least one second longer than the Throttle Ramp Time that is set with RSC_RAMP_TIME.
     // @Range: 0 60
     // @Units: s
     // @User: Standard
     AP_GROUPINFO("RSC_RUNUP_TIME", 11, AP_MotorsHeli, _rsc_runup_time, AP_MOTORS_HELI_RSC_RUNUP_TIME),
 
-    // @Param: RSC_CRITICAL
-    // @DisplayName: Critical Rotor Speed
-    // @Description: Rotor speed below which flight is not possible
-    // @Range: 0 1000
-    // @Increment: 10
-    // @User: Standard
-    AP_GROUPINFO("RSC_CRITICAL", 12, AP_MotorsHeli, _rsc_critical, AP_MOTORS_HELI_RSC_CRITICAL),
-
-    // @Param: RSC_IDLE
-    // @DisplayName: Rotor Speed Output at Idle
-    // @Description: Rotor speed output while armed but rotor control speed is not engaged
-    // @Range: 0 500
-    // @Increment: 10
-    // @User: Standard
-    AP_GROUPINFO("RSC_IDLE", 13, AP_MotorsHeli, _rsc_idle_output, AP_MOTORS_HELI_RSC_IDLE_DEFAULT),
+    // indices 12 and 13 were RSC_CRITICAL and RSC_IDLE and were moved to RSC library. Do not use this index in the future.
 
     // index 14 was RSC_POWER_LOW. Do not use this index in the future.
 
@@ -153,85 +132,19 @@ const AP_Param::GroupInfo AP_MotorsHeli::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("RSC_SLEWRATE", 19, AP_MotorsHeli, _rsc_slewrate, 0),
 
-    // @Param: RSC_THRCRV_0
-    // @DisplayName: Throttle Servo Position for 0 percent collective
-    // @Description: Throttle Servo Position for 0 percent collective. This is on a scale from 0 to 1000, where 1000 is full throttle and 0 is zero throttle. Actual PWM values are controlled by SERVOX_MIN and SERVOX_MAX. The 0 percent collective is defined by H_COL_MIN and 100 percent collective is defined by H_COL_MAX.
-    // @Range: 0 1000
-    // @Increment: 10
-    // @User: Standard
-    AP_GROUPINFO("RSC_THRCRV_0", 20, AP_MotorsHeli, _rsc_thrcrv[0], AP_MOTORS_HELI_RSC_THRCRV_0_DEFAULT),
+    // indices 20 to 25 was throttle curve. Do not use this index in the future.
 
-    // @Param: RSC_THRCRV_25
-    // @DisplayName: Throttle Servo Position for 25 percent collective
-    // @Description: Throttle Servo Position for 25 percent collective. This is on a scale from 0 to 1000, where 1000 is full throttle and 0 is zero throttle. Actual PWM values are controlled by SERVOX_MIN and SERVOX_MAX. The 0 percent collective is defined by H_COL_MIN and 100 percent collective is defined by H_COL_MAX.
-    // @Range: 0 1000
-    // @Increment: 10
-    // @User: Standard
-    AP_GROUPINFO("RSC_THRCRV_25", 21, AP_MotorsHeli, _rsc_thrcrv[1], AP_MOTORS_HELI_RSC_THRCRV_25_DEFAULT),
+    // @Group: RSC_THRCRV_
+    // @Path: AP_MotorsHeli_RSC.cpp
+    AP_SUBGROUPINFO(_rsc_thrcrv, "RSC_THRCRV_", 27, AP_MotorsHeli, RSCThrCrvParam),
 
-    // @Param: RSC_THRCRV_50
-    // @DisplayName: Throttle Servo Position for 50 percent collective
-    // @Description: Throttle Servo Position for 50 percent collective. This is on a scale from 0 to 1000, where 1000 is full throttle and 0 is zero throttle. Actual PWM values are controlled by SERVOX_MIN and SERVOX_MAX. The 0 percent collective is defined by H_COL_MIN and 100 percent collective is defined by H_COL_MAX.
-    // @Range: 0 1000
-    // @Increment: 10
-    // @User: Standard
-    AP_GROUPINFO("RSC_THRCRV_50", 22, AP_MotorsHeli, _rsc_thrcrv[2], AP_MOTORS_HELI_RSC_THRCRV_50_DEFAULT),
+    // @Group: RSC_GOV_
+    // @Path: AP_MotorsHeli_RSC.cpp
+    AP_SUBGROUPINFO(_rsc_gov, "RSC_GOV_", 28, AP_MotorsHeli, RSCGovParam),
 
-    // @Param: RSC_THRCRV_75
-    // @DisplayName: Throttle Servo Position for 75 percent collective
-    // @Description: Throttle Servo Position for 75 percent collective. This is on a scale from 0 to 1000, where 1000 is full throttle and 0 is zero throttle. Actual PWM values are controlled by SERVOX_MIN and SERVOX_MAX. The 0 percent collective is defined by H_COL_MIN and 100 percent collective is defined by H_COL_MAX.
-    // @Range: 0 1000
-    // @Increment: 10
-    // @User: Standard
-    AP_GROUPINFO("RSC_THRCRV_75", 23, AP_MotorsHeli, _rsc_thrcrv[3], AP_MOTORS_HELI_RSC_THRCRV_75_DEFAULT),
-
-    // @Param: RSC_THRCRV_100
-    // @DisplayName: Throttle Servo Position for 100 percent collective
-    // @Description: Throttle Servo Position for 100 percent collective. This is on a scale from 0 to 1000, where 1000 is full throttle and 0 is zero throttle. Actual PWM values are controlled by SERVOX_MIN and SERVOX_MAX. The 0 percent collective is defined by H_COL_MIN and 100 percent collective is defined by H_COL_MAX.
-    // @Range: 0 1000
-    // @Increment: 10
-    // @User: Standard
-    AP_GROUPINFO("RSC_THRCRV_100", 24, AP_MotorsHeli, _rsc_thrcrv[4], AP_MOTORS_HELI_RSC_THRCRV_100_DEFAULT),
-
-    // @Param: RSC_GOV_SET
-    // @DisplayName: Governor RPM Reference Setting
-    // @Description: Main rotor rpm setting that governor maintains when engaged
-    // @Range: 800 3500
-    // @Increment: 10
-    // @User: Standard
-    AP_GROUPINFO("RSC_GOV_SET", 25, AP_MotorsHeli, _rsc_governor_reference, AP_MOTORS_HELI_RSC_GOVERNOR_SET_DEFAULT),
-    
-    // @Param: RSC_GOV_DISGAG
-    // @DisplayName: Throttle Percentage for Governor Disengage
-    // @Description: Percentage of throttle where the governor will disenage to allow return to flight idle power
-    // @Range: 0 50
-    // @Increment: 1
-    // @User: Standard
-    AP_GROUPINFO("RSC_GOV_DISGAG", 26, AP_MotorsHeli, _rsc_governor_disengage, AP_MOTORS_HELI_RSC_GOVERNOR_DISENGAGE_DEFAULT),
-
-    // @Param: RSC_GOV_DROOP
-    // @DisplayName: Governor Droop Response Setting
-    // @Description: Governor droop response under load, 0-100%. Higher value is quicker response but may cause surging
-    // @Range: 0 100
-    // @Increment: 1
-    // @User: Standard
-    AP_GROUPINFO("RSC_GOV_DROOP", 27, AP_MotorsHeli, _rsc_governor_droop_response, AP_MOTORS_HELI_RSC_GOVERNOR_DROOP_DEFAULT),
-
-    // @Param: RSC_GOV_TC
-    // @DisplayName: Governor Throttle Curve Gain
-    // @Description: Percentage of throttle curve gain in governor output
-    // @Range: 50 100
-    // @Increment: 1
-    // @User: Standard
-    AP_GROUPINFO("RSC_GOV_TC", 28, AP_MotorsHeli, _rsc_governor_tc, AP_MOTORS_HELI_RSC_GOVERNOR_TC_DEFAULT),
-    
-    // @Param: RSC_GOV_RANGE
-    // @DisplayName: Governor Operational Range
-    // @Description: RPM range +/- governor rpm reference setting where governor is operational. If speed sensor fails or rpm falls outside of this range, the governor will disengage and return to throttle curve. Recommended range is 100
-    // @Range: 50 200
-    // @Increment: 1
-    // @User: Standard
-    AP_GROUPINFO("RSC_GOV_RANGE", 29, AP_MotorsHeli, _rsc_governor_range, AP_MOTORS_HELI_RSC_GOVERNOR_RANGE_DEFAULT),
+    // @Group: RSC_
+    // @Path: AP_MotorsHeli_RSC.cpp
+    AP_SUBGROUPINFO(_rsc, "RSC_", 29, AP_MotorsHeli, RSCParam),
 
     AP_GROUPEND
 };
@@ -398,10 +311,18 @@ void AP_MotorsHeli::output_disarmed()
 // parameter_check - check if helicopter specific parameters are sensible
 bool AP_MotorsHeli::parameter_check(bool display_msg) const
 {
-    // returns false if _rsc_setpoint is not higher than _rsc_critical as this would not allow rotor_runup_complete to ever return true
-    if (_rsc_critical >= _rsc_setpoint) {
+    // returns false if _rsc_setpoint exceeds 100% throttle
+    if (_rsc.get_setpoint() > 100.0f) {
         if (display_msg) {
-            gcs().send_text(MAV_SEVERITY_CRITICAL, "PreArm: H_RSC_CRITICAL too large");
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "PreArm: Throttle setting over 100 percent");
+        }
+        return false;
+    }
+
+    // returns false if _rsc_setpoint is not higher than _rsc_critical as this would not allow rotor_runup_complete to ever return true for electric helicopters with ESC governor
+    if (_rsc.get_critical() >= _rsc.get_setpoint()) {
+        if (display_msg) {
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "PreArm: Rotor critical speed too high");
         }
         return false;
     }
@@ -409,23 +330,23 @@ bool AP_MotorsHeli::parameter_check(bool display_msg) const
     // returns false if RSC Mode is not set to a valid control mode
     if (_rsc_mode <= (int8_t)ROTOR_CONTROL_MODE_DISABLED || _rsc_mode > (int8_t)ROTOR_CONTROL_MODE_CLOSED_LOOP_POWER_OUTPUT) {
         if (display_msg) {
-            gcs().send_text(MAV_SEVERITY_CRITICAL, "PreArm: H_RSC_MODE invalid");
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "PreArm: Throttle mode invalid");
         }
         return false;
     }
 
-    // returns false if RSC Runup Time is less than Ramp time as this could cause undesired behaviour of rotor speed estimate
+    // returns false if RSC Runup Time is less than Ramp time as this could cause undesired behaviour of rotor speed estimate when no speed sensor is used
     if (_rsc_runup_time <= _rsc_ramp_time){
         if (display_msg) {
-            gcs().send_text(MAV_SEVERITY_CRITICAL, "PreArm: H_RUNUP_TIME too small");
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "PreArm: Runup time too short");
         }
         return false;
     }
 
-    // returns false if idle output is higher than critical rotor speed as this could block runup_complete from going false
-    if ( _rsc_idle_output >=  _rsc_critical){
+    // returns false if idle output is higher than critical rotor speed percentage
+    if ( _rsc.get_idle_output() >=  _rsc.get_critical()){
         if (display_msg) {
-            gcs().send_text(MAV_SEVERITY_CRITICAL, "PreArm: H_RSC_IDLE too large");
+            gcs().send_text(MAV_SEVERITY_CRITICAL, "PreArm: Engine idle speed too high");
         }
         return false;
     }

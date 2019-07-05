@@ -99,10 +99,10 @@ const AP_Param::GroupInfo AP_MotorsHeli_Single::var_info[] = {
     AP_GROUPINFO("FLYBAR_MODE", 9, AP_MotorsHeli_Single, _flybar_mode, AP_MOTORS_HELI_NOFLYBAR),
 
     // @Param: TAIL_SPEED
-    // @DisplayName: Direct Drive VarPitch Tail ESC speed
-    // @Description: Direct Drive VarPitch Tail ESC speed in PWM microseconds.  Only used when TailType is DirectDrive VarPitch
-    // @Range: 0 1000
-    // @Units: PWM
+    // @DisplayName: Direct Drive Variable Pitch tail motor throttle setting
+    // @Description: DDVP tail motor throttle setting, 0-100%  Only used when TailType is DirectDrive VarPitch
+    // @Range: 0 100
+    // @Units: %
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("TAIL_SPEED", 10, AP_MotorsHeli_Single, _direct_drive_tailspeed, AP_MOTORS_HELI_SINGLE_DDVP_SPEED_DEFAULT),
@@ -238,11 +238,11 @@ void AP_MotorsHeli_Single::set_desired_rotor_speed(float desired_speed)
     _main_rotor.set_desired_speed(desired_speed);
 
     // always send desired speed to tail rotor control, will do nothing if not DDVP not enabled
-    _tail_rotor.set_desired_speed(_direct_drive_tailspeed*0.001f);
+    _tail_rotor.set_desired_speed(_direct_drive_tailspeed*0.01f);
 }
 
 // set_rotor_rpm - used for governor with speed sensor
-void AP_MotorsHeli_Single::set_rpm(int16_t rotor_rpm)
+void AP_MotorsHeli_Single::set_rpm(float rotor_rpm)
 {
     _main_rotor.set_rotor_rpm(rotor_rpm);
 }
@@ -250,22 +250,25 @@ void AP_MotorsHeli_Single::set_rpm(int16_t rotor_rpm)
 // calculate_scalars - recalculates various scalers used.
 void AP_MotorsHeli_Single::calculate_armed_scalars()
 {
-    float thrcrv[5];
-    for (uint8_t i = 0; i < 5; i++) {
-        thrcrv[i]=_rsc_thrcrv[i]*0.001f;
-    }
+    // Set common RSC variables
     _main_rotor.set_ramp_time(_rsc_ramp_time);
     _main_rotor.set_runup_time(_rsc_runup_time);
-    _main_rotor.set_critical_speed(_rsc_critical*0.001f);
-    _main_rotor.set_idle_output(_rsc_idle_output*0.001f);
-    _main_rotor.set_throttle_curve(thrcrv, (uint16_t)_rsc_slewrate.get());
-    _main_rotor.set_governor_disengage(_rsc_governor_disengage*0.01f);
-    _main_rotor.set_governor_droop_response(_rsc_governor_droop_response*0.01f);
-    _main_rotor.set_governor_reference(_rsc_governor_reference);
-    _main_rotor.set_governor_range(_rsc_governor_range);
-    _main_rotor.set_governor_tc(_rsc_governor_tc*0.01f);
-   }
+    _main_rotor.set_critical_speed(_rsc.get_critical()*0.01f);
+    _main_rotor.set_idle_output(_rsc.get_idle_output()*0.01f);
+    _main_rotor.set_slewrate(_rsc_slewrate);
+    _main_rotor.set_rpm_reference(_rsc.get_rpm_reference());
 
+    // Set rsc mode specific parameters
+    if (_rsc_mode == ROTOR_CONTROL_MODE_OPEN_LOOP_POWER_OUTPUT) {
+        _main_rotor.set_throttle_curve(_rsc_thrcrv.get_thrcrv());
+    } else if (_rsc_mode == ROTOR_CONTROL_MODE_CLOSED_LOOP_POWER_OUTPUT) {
+        _main_rotor.set_throttle_curve(_rsc_thrcrv.get_thrcrv());
+        _main_rotor.set_governor_disengage(_rsc_gov.get_disengage()*0.01f);
+        _main_rotor.set_governor_droop_response(_rsc_gov.get_droop_response()*0.01f);
+        _main_rotor.set_governor_range(_rsc_gov.get_range());
+        _main_rotor.set_governor_tcgain(_rsc_gov.get_tcgain()*0.01f);
+    }
+}
 
 // calculate_scalars - recalculates various scalers used.
 void AP_MotorsHeli_Single::calculate_scalars()
@@ -292,8 +295,8 @@ void AP_MotorsHeli_Single::calculate_scalars()
         _tail_rotor.set_control_mode(ROTOR_CONTROL_MODE_SPEED_SETPOINT);
         _tail_rotor.set_ramp_time(_rsc_ramp_time);
         _tail_rotor.set_runup_time(_rsc_runup_time);
-        _tail_rotor.set_critical_speed(_rsc_critical*0.001f);
-        _tail_rotor.set_idle_output(_rsc_idle_output*0.001f);
+        _tail_rotor.set_critical_speed(_rsc.get_critical()*0.01f);
+        _tail_rotor.set_idle_output(_rsc.get_idle_output()*0.01f);
     } else {
         _tail_rotor.set_control_mode(ROTOR_CONTROL_MODE_DISABLED);
         _tail_rotor.set_ramp_time(0);

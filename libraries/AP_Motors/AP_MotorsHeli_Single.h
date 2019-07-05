@@ -34,7 +34,7 @@
 #define AP_MOTORS_HELI_SINGLE_TAILTYPE_DIRECTDRIVE_FIXEDPITCH  3
 
 // direct-drive variable pitch defaults
-#define AP_MOTORS_HELI_SINGLE_DDVP_SPEED_DEFAULT               500
+#define AP_MOTORS_HELI_SINGLE_DDVP_SPEED_DEFAULT               50
 
 // default external gyro gain
 #define AP_MOTORS_HELI_SINGLE_EXT_GYRO_GAIN                    350
@@ -70,7 +70,7 @@ public:
     void set_desired_rotor_speed(float desired_speed) override;
 
     // set_rpm - for rotor speed governor
-    void set_rpm(int16_t rotor_rpm) override;
+    void set_rpm(float rotor_rpm) override;
 
     // get_main_rotor_speed - estimated rotor speed when no speed sensor or governor is used
     float get_main_rotor_speed() const  override { return _main_rotor.get_rotor_speed(); }
@@ -158,7 +158,7 @@ protected:
     AP_Int16        _phase_angle;               // Phase angle correction for rotor head.  If pitching the swash forward induces a roll, this can be correct the problem
     AP_Float        _collective_yaw_effect;     // Feed-forward compensation to automatically add rudder input when collective pitch is increased. Can be positive or negative depending on mechanics.
     AP_Int8         _flybar_mode;               // Flybar present or not.  Affects attitude controller used during ACRO flight mode
-    AP_Int16        _direct_drive_tailspeed;    // Direct Drive VarPitch Tail ESC speed (0 ~ 1000)
+    AP_Int16        _direct_drive_tailspeed;    // Direct Drive VarPitch tail throttle setting, 0-100%
 
     bool            _acro_tail = false;
     float           _rollFactor[AP_MOTORS_HELI_SINGLE_NUM_SWASHPLATE_SERVOS];
