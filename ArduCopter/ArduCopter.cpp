@@ -260,7 +260,7 @@ void Copter::fast_loop()
 {
     // update INS immediately to get current gyro data populated
     ins.update();
-    
+
     // run low level rate controllers that only require IMU data
     attitude_control->rate_controller_run();
 
@@ -512,7 +512,7 @@ void Copter::one_hz_loop()
     terrain_logging();
 
     adsb.set_is_flying(!ap.land_complete);
-    
+
     // update error mask of sensors and subsystems. The mask uses the
     // MAV_SYS_STATUS_* values from mavlink. If a bit is set then it
     // indicates that the sensor or subsystem is present but not

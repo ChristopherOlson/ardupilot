@@ -5,7 +5,7 @@
 #if FRAME_CONFIG == HELI_FRAME
 
 #ifndef HELI_DYNAMIC_FLIGHT_SPEED_MIN
- #define HELI_DYNAMIC_FLIGHT_SPEED_MIN      500     // we are in "dynamic flight" when the speed is over 1m/s for 2 seconds
+ #define HELI_DYNAMIC_FLIGHT_SPEED_MIN      500     // we are in "dynamic flight" when the speed is over 5m/s for 2 seconds
 #endif
 
 // counter to control dynamic flight profile
@@ -143,7 +143,7 @@ void Copter::heli_update_rotor_speed_targets()
 
     switch (rsc_control_mode) {
         case ROTOR_CONTROL_MODE_SPEED_PASSTHROUGH:
-            // pass through pilot desired rotor speed if control input is higher than 10, creating a deadband at the bottom
+            // pass through pilot desired rotor speed from the RC
             if (rsc_control_deglitched > 0.01f) {
                 ap.motor_interlock_switch = true;
                 motors->set_desired_rotor_speed(rsc_control_deglitched);
@@ -155,11 +155,13 @@ void Copter::heli_update_rotor_speed_targets()
         case ROTOR_CONTROL_MODE_SPEED_SETPOINT:
         case ROTOR_CONTROL_MODE_OPEN_LOOP_POWER_OUTPUT:
         case ROTOR_CONTROL_MODE_CLOSED_LOOP_POWER_OUTPUT:
-            // pass setpoint through as desired rotor speed, this is almost pointless as the Setpoint serves no function in this mode
-            // other than being used to create a crude estimate of rotor speed
+            // pass setpoint through as desired rotor speed. Needs work, this is pointless as it is
+            // not used by closed loop control. Being used as a catch-all for other modes regardless
+            // of whether or not they actually use it
+            // set rpm from rotor speed sensor
             if (rsc_control_deglitched > 0.0f) {
-                ((AP_MotorsHeli_Single&)*motors).set_rpm(rpm_sensor.get_rpm(0.0f));
                 ap.motor_interlock_switch = true;
+                motors->set_rpm(rpm_sensor.get_rpm(0));
                 motors->set_desired_rotor_speed(motors->get_rsc_setpoint());
             }else{
                 ap.motor_interlock_switch = false;
