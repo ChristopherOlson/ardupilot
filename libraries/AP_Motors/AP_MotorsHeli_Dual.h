@@ -24,7 +24,7 @@
 
 // collective control direction definitions
 #define AP_MOTORS_HELI_DUAL_COLLECTIVE_DIRECTION_NORMAL        0
-#define AP_MOTORS_HELI_DUAL_COLLECTIVE_DIRECTION_REVERSED        1
+#define AP_MOTORS_HELI_DUAL_COLLECTIVE_DIRECTION_REVERSED      1
 
 // rsc function output channel
 #define AP_MOTORS_HELI_DUAL_RSC                     CH_8
@@ -67,7 +67,7 @@ public:
     void output_test(uint8_t motor_seq, int16_t pwm) override;
 
     // set_rpm - for rotor speed governor
-    void set_rpm(int16_t rotor_rpm);
+    void set_rpm(float rotor_rpm);
 
     // set_desired_rotor_speed - sets target rotor speed as a number from 0 ~ 1000
     void set_desired_rotor_speed(float desired_speed) override;

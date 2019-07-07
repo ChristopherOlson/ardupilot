@@ -247,7 +247,7 @@ void AP_MotorsHeli_Single::set_desired_rotor_speed(float desired_speed)
 }
 
 // set_rotor_rpm - used for governor with speed sensor
-void AP_MotorsHeli_Single::set_rpm(int16_t rotor_rpm)
+void AP_MotorsHeli_Single::set_rpm(float rotor_rpm)
 {
     _main_rotor.set_rotor_rpm(rotor_rpm);
 }
@@ -268,7 +268,7 @@ void AP_MotorsHeli_Single::calculate_armed_scalars()
     _main_rotor.set_governor_droop_response(_rsc_governor_droop_response*0.01f);
     _main_rotor.set_governor_reference(_rsc_governor_reference);
     _main_rotor.set_governor_range(_rsc_governor_range);
-    _main_rotor.set_governor_tc(_rsc_governor_tc*0.01f);
+    _main_rotor.set_governor_tcgain(_rsc_governor_tcgain*0.01f);
 }
 
 // calculate_scalars - recalculates various scalers used.
