@@ -54,7 +54,7 @@ bool AP_Arming_Copter::pre_arm_checks(bool display_failure)
     // as state can change at any time.
     if (copter.ap.using_interlock && copter.ap.motor_interlock_switch) {
         if (display_failure) {
-            gcs_send_text(MAV_SEVERITY_CRITICAL,"PreArm: Motor Interlock Enabled");
+            gcs_send_text(MAV_SEVERITY_CRITICAL,"PreArm: Check Throttle Hold Switch");
         }
         return false;
     }
@@ -682,7 +682,7 @@ bool AP_Arming_Copter::arm_checks(bool display_failure, bool arming_from_gcs)
     // if we are using motor interlock switch and it's enabled, fail to arm
     // skip check in Throw mode which takes control of the motor interlock
     if (copter.ap.using_interlock && copter.motors->get_interlock()) {
-        gcs_send_text(MAV_SEVERITY_CRITICAL,"Arm: Motor Interlock Enabled");
+        gcs_send_text(MAV_SEVERITY_CRITICAL,"Arm: Throttle Hold Not Engaged");
         return false;
     }
 
