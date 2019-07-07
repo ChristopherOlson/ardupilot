@@ -991,6 +991,7 @@ private:
     void heli_update_rotor_speed_targets();
     bool heli_acro_init(bool ignore_checks);
     void heli_acro_run();
+    void heli_acro_virtual_flybar( float &roll_out, float &pitch_out, float &yaw_out, float pitch_leak, float roll_leak);
     bool heli_stabilize_init(bool ignore_checks);
     void heli_stabilize_run();
     void read_inertia();
