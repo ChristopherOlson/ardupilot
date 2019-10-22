@@ -1,5 +1,9 @@
 ArduHeli Feature Release Notes:
 ------------------------------------------------------------------
+ArduHeli 3.6.11 Feature Release 22-Oct-2019
+1) Rebase on latest Copter stable 3.6.11
+    a) No functional change for helicopters
+------------------------------------------------------------------
 ArduHeli 3.6.10 Feature Release 03-Sept-2019
 1) Rebase on latest Copter stable
     a) No functional change for helicopters
