@@ -45,7 +45,7 @@ const AP_Param::GroupInfo AP_MotorsHeli::var_info[] = {
     AP_GROUPINFO("COL_MAX", 4, AP_MotorsHeli, _collective_max, AP_MOTORS_HELI_COLLECTIVE_MAX),
 
     // @Param: COL_MID
-    // @DisplayName: Zero-Thrust Collective Pitch 
+    // @DisplayName: Zero-Thrust Collective Pitch
     // @Description: Swash servo position in PWM microseconds corresponding to zero collective pitch (or zero lift for Asymmetrical blades)
     // @Range: 1000 2000
     // @Units: PWM
@@ -203,7 +203,7 @@ void AP_MotorsHeli::output()
     } else {
         output_disarmed();
     }
-    
+
     output_to_motors();
 
 };
